@@ -14,7 +14,7 @@ import (
 )
 
 type Client struct {
-	Conn       websocket.Conn
+	Conn       *websocket.Conn
 	HttpClient http.Client
 	Id         string
 	Status     string
@@ -73,6 +73,7 @@ func (client *Client) JoinRoom(hash string, name string, hostaddr string) (statu
 	conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("@{\"type\":\"join2\",\"uucode\":\"%s\",\"useragent\":\"Chrome\",\"hash\":\"%s\"}", client.Ucode, hash)))
 	conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("@{\"type\":\"config_user\",\"id\":\"%s\",\"color\":\"#000000\",\"mouse_mode\":-1,\"wis\":\"\"}", client.Id)))
 	client.Status = "Joined"
+	client.Conn = conn
 	return response.StatusCode
 }
 
