@@ -14,11 +14,12 @@ import (
 )
 
 type Client struct {
-	Conn       *websocket.Conn
-	HttpClient http.Client
-	Id         string
-	Status     string
-	Ucode      string
+	Conn        *websocket.Conn
+	HttpClient  http.Client
+	Id          string
+	KeepRoutine bool
+	Status      string
+	Ucode       string
 }
 
 type OpenRoomResponse struct {
@@ -72,6 +73,9 @@ func (client *Client) JoinRoom(hash string, name string, hostaddr string) (statu
 	conn, _, _ := websocket.DefaultDialer.Dial(hostaddr, nil)
 	conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("@{\"type\":\"join2\",\"uucode\":\"%s\",\"useragent\":\"Chrome\",\"hash\":\"%s\"}", client.Ucode, hash)))
 	conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("@{\"type\":\"config_user\",\"id\":\"%s\",\"color\":\"#000000\",\"mouse_mode\":-1,\"wis\":\"\"}", client.Id)))
+
+	client.StartRoutine()
+
 	client.Status = "Joined"
 	client.Conn = conn
 	return response.StatusCode
@@ -87,4 +91,22 @@ func (client *Client) Draw(x int, y int, color string) {
 
 func (client *Client) Erase(x int, y int) {
 
+}
+
+func (client *Client) StartRoutine() {
+	client.KeepRoutine = true
+	for {
+		if !client.KeepRoutine {
+			break
+		}
+
+		_, message, _ := client.Conn.ReadMessage()
+		if message != nil {
+			fmt.Println(string(message))
+		}
+	}
+}
+
+func (client *Client) StopRoutine() {
+	client.KeepRoutine = false
 }
